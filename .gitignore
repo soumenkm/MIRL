@@ -1,5 +1,5 @@
 .vscode
 __pycache__
-*acts*
-*logs*
-*data*
+exp1/acts*
+exp1/logs
+exp1/data
