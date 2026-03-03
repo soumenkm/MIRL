@@ -199,20 +199,35 @@ class LanguageMetadata:
         'cyrillic': 'ru',
     }
     
-    # Answer prompts for each language
+    # # Answer prompts for each language
+    # ANSWER_PROMPTS = {
+    #     'en': ' Answer:',
+    #     'zh': ' 答案:',
+    #     'bn': ' উত্তর:',
+    #     'te': ' సమాధానం:',
+    #     'th': ' คำตอบ:',
+    #     'es': ' Respuesta:',
+    #     'fr': ' Réponse:',
+    #     'de': ' Antwort:',
+    #     'ja': ' 答え:',
+    #     'ru': ' Ответ:',
+    #     'hi': ' उत्तर:',
+    #     'ko': ' 답변:',
+    # }
+    
     ANSWER_PROMPTS = {
         'en': ' Answer:',
-        'zh': ' 答案:',
-        'bn': ' উত্তর:',
-        'te': ' సమాధానం:',
-        'th': ' คำตอบ:',
-        'es': ' Respuesta:',
-        'fr': ' Réponse:',
-        'de': ' Antwort:',
-        'ja': ' 答え:',
-        'ru': ' Ответ:',
-        'hi': ' उत्तर:',
-        'ko': ' 답변:',
+        'zh': ' Answer:',
+        'bn': ' Answer:',
+        'te': ' Answer:',
+        'th': ' Answer:',
+        'es': ' Answer:',
+        'fr': ' Answer:',
+        'de': ' Answer:',
+        'ja': ' Answer:',
+        'ru': ' Answer:',
+        'hi': ' Answer:',
+        'ko': ' Answer:',
     }
     
     @classmethod

@@ -585,9 +585,9 @@ def main():
     logger = logging.getLogger(__name__)
     
     config = {
-        'model_name': 'Qwen/Qwen3-4B',
+        'model_name': 'Qwen/Qwen2.5-3B-Instruct',
         'languages': ['en', 'zh', 'bn', 'te', 'th', 'es', 'fr', 'de', 'ja', 'ru'],
-        'acts_dir': Path('./exp1/acts_qwen3-4b'),
+        'acts_dir': Path('./exp1/acts_qwen2p5-3b-inst'),
         'data_dir': Path('./exp1/data'),
         'output_dir': Path('./exp1/outputs'),
     }

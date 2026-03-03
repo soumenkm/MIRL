@@ -42,7 +42,7 @@ def main():
     """Main execution function"""
     
     config = {
-        'model_name': 'Qwen/Qwen3-4B',
+        'model_name': 'Qwen/Qwen2.5-3B-Instruct',
         'device': 'cuda' if torch.cuda.is_available() else 'cpu',
         'dtype': 'bfloat16',
         'languages': ['en', 'zh', 'bn', 'te', 'th', 'es', 'fr', 'de', 'ja', 'ru'],
@@ -50,7 +50,7 @@ def main():
         'random_seed': 42,
         'num_layers': 36,
         'top_k_tokens': 50,
-        'acts_dir': Path('./exp1/acts_qwen3-4b'),
+        'acts_dir': Path('./exp1/acts_qwen2p5-3b-inst'),
         'data_dir': Path('./exp1/data'),
         'log_dir': Path('./exp1/logs'),
         'output_dir': Path('./exp1/outputs'),
