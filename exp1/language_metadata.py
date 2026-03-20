@@ -216,18 +216,18 @@ class LanguageMetadata:
     # }
     
     ANSWER_PROMPTS = {
-        'en': ' Answer:',
-        'zh': ' Answer:',
-        'bn': ' Answer:',
-        'te': ' Answer:',
-        'th': ' Answer:',
-        'es': ' Answer:',
-        'fr': ' Answer:',
-        'de': ' Answer:',
-        'ja': ' Answer:',
-        'ru': ' Answer:',
-        'hi': ' Answer:',
-        'ko': ' Answer:',
+        'en': ' Answer: ',
+        'zh': ' Answer: ',
+        'bn': ' Answer: ',
+        'te': ' Answer: ',
+        'th': ' Answer: ',
+        'es': ' Answer: ',
+        'fr': ' Answer: ',
+        'de': ' Answer: ',
+        'ja': ' Answer: ',
+        'ru': ' Answer: ',
+        'hi': ' Answer: ',
+        'ko': ' Answer: ',
     }
     
     @classmethod
@@ -446,4 +446,4 @@ class LanguageMetadata:
     @classmethod
     def get_answer_prompt(cls, language: str) -> str:
         """Get answer prompt for a language"""
-        return cls.ANSWER_PROMPTS.get(language, ' Answer:')
+        return cls.ANSWER_PROMPTS.get(language, ' Answer: ')

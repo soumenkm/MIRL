@@ -47,7 +47,8 @@ class MGSMHandler:
                     lang_dataset = load_dataset(
                         "jbross-ibm-research/mgsm",
                         lang,
-                        split="test"
+                        split="test",
+                        download_mode="reuse_dataset_if_exists"
                     )
                     
                     if 'language' not in lang_dataset.column_names:
