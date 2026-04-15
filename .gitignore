@@ -1,5 +1,6 @@
 .vscode
 __pycache__
-exp1/acts*
-exp1/logs
+*acts
+*logs
 exp1/data
+exp2/data/url-nlp
