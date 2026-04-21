@@ -1,0 +1,4 @@
+2026-04-20 16:09:18,800 [INFO] Logging to exp2/logs/models.log
+2026-04-20 16:09:18,800 [INFO] Loading tokenizer: ./models/Qwen2.5-7B-Instruct
+2026-04-20 16:09:20,468 [INFO] Vocab size: 151643, pad_token: <|endoftext|>
+2026-04-20 16:09:20,470 [INFO] Loading base model: ./models/Qwen2.5-7B-Instruct -> cuda:0 (4bit=True)

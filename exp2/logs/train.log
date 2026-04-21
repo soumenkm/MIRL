@@ -1,0 +1,22 @@
+2026-04-20 15:52:26,264 [INFO] Logging to exp2/logs/train.log
+2026-04-20 15:52:26,264 [INFO] Initializing model manager...
+2026-04-20 15:53:15,874 [INFO] Initializing reward manager...
+2026-04-20 15:54:48,834 [INFO] Initializing dataset...
+2026-04-20 15:54:49,425 [INFO] Training config: iterations=16, batch_size=8, group_size=4, epsilon=0.2, beta=0.04, lr=1e-05
+2026-04-20 15:54:49,425 [INFO] Total training examples: 1400
+2026-04-20 15:54:49,425 [INFO] Steps per iteration: 175
+2026-04-20 15:54:49,425 [INFO] Estimated total steps: 2800
+2026-04-20 15:54:49,425 [INFO] Checkpoint save frequency: every 10 steps
+2026-04-20 15:54:49,425 [INFO] ================================================================================
+2026-04-20 15:54:49,425 [INFO] Starting GRPO training
+2026-04-20 15:54:49,425 [INFO]   Total examples: 1400
+2026-04-20 15:54:49,425 [INFO]   Steps per iteration (epoch): 175
+2026-04-20 15:54:49,425 [INFO]   Num iterations: 16
+2026-04-20 15:54:49,425 [INFO]   Total gradient steps: 2800
+2026-04-20 15:54:49,425 [INFO] ================================================================================
+2026-04-20 15:54:49,425 [INFO] 
+================================================================================
+2026-04-20 15:54:49,425 [INFO] Iteration 1/16 (collecting fresh rollouts)
+2026-04-20 15:54:49,425 [INFO] ================================================================================
+2026-04-20 16:09:18,795 [INFO] Logging to exp2/logs/train.log
+2026-04-20 16:09:18,798 [INFO] Initializing model manager...

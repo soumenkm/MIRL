@@ -1,0 +1,31 @@
+2026-04-15 12:15:45,860 [INFO] Logging to exp2/logs/download_mgsm.log
+2026-04-15 12:15:45,878 [INFO] Languages: ['en', 'bn', 'te', 'th', 'ru', 'zh', 'ja']
+2026-04-15 12:15:45,879 [INFO] Data directory: exp2/data
+2026-04-15 12:15:45,879 [INFO] Cloning https://github.com/google-research/url-nlp.git into exp2/data/url-nlp
+2026-04-15 12:15:49,529 [INFO] Clone complete.
+2026-04-15 12:15:49,529 [INFO] Loading exemplars from exp2/data/url-nlp/mgsm/exemplars.py
+2026-04-15 12:15:50,006 [INFO]   en: 8 exemplars
+2026-04-15 12:15:50,006 [INFO]   bn: 8 exemplars
+2026-04-15 12:15:50,007 [INFO]   te: 8 exemplars
+2026-04-15 12:15:50,007 [INFO]   th: 8 exemplars
+2026-04-15 12:15:50,007 [INFO]   ru: 8 exemplars
+2026-04-15 12:15:50,007 [INFO]   zh: 8 exemplars
+2026-04-15 12:15:50,007 [INFO]   ja: 8 exemplars
+2026-04-15 12:15:50,020 [INFO] Saved exp2/data/train.json (39.4 KB)
+2026-04-15 12:15:50,025 [INFO]   en: 250 problems
+2026-04-15 12:15:50,030 [INFO]   bn: 250 problems
+2026-04-15 12:15:50,034 [INFO]   te: 250 problems
+2026-04-15 12:15:50,036 [INFO]   th: 250 problems
+2026-04-15 12:15:50,038 [INFO]   ru: 250 problems
+2026-04-15 12:15:50,039 [INFO]   zh: 250 problems
+2026-04-15 12:15:50,040 [INFO]   ja: 250 problems
+2026-04-15 12:15:50,052 [INFO] Saved exp2/data/test.json (912.7 KB)
+2026-04-15 12:15:50,052 [INFO] Summary:
+2026-04-15 12:15:50,052 [INFO]   en: train=8, test=250
+2026-04-15 12:15:50,052 [INFO]   bn: train=8, test=250
+2026-04-15 12:15:50,052 [INFO]   te: train=8, test=250
+2026-04-15 12:15:50,052 [INFO]   th: train=8, test=250
+2026-04-15 12:15:50,052 [INFO]   ru: train=8, test=250
+2026-04-15 12:15:50,052 [INFO]   zh: train=8, test=250
+2026-04-15 12:15:50,052 [INFO]   ja: train=8, test=250
+2026-04-15 12:15:50,052 [INFO] Done.

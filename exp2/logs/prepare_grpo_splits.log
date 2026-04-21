@@ -1,0 +1,13 @@
+2026-04-15 12:29:27,543 [INFO] Logging to exp2/logs/prepare_grpo_splits.log
+2026-04-15 12:29:27,552 [INFO] Loaded exp2/data/test.json
+2026-04-15 12:29:27,552 [INFO] Loaded exp2/data/train.json
+2026-04-15 12:29:27,734 [INFO]   en: grpo_train=200, grpo_test=58
+2026-04-15 12:29:27,735 [INFO]   bn: grpo_train=200, grpo_test=58
+2026-04-15 12:29:27,735 [INFO]   te: grpo_train=200, grpo_test=58
+2026-04-15 12:29:27,735 [INFO]   th: grpo_train=200, grpo_test=58
+2026-04-15 12:29:27,735 [INFO]   ru: grpo_train=200, grpo_test=58
+2026-04-15 12:29:27,735 [INFO]   zh: grpo_train=200, grpo_test=58
+2026-04-15 12:29:27,735 [INFO]   ja: grpo_train=200, grpo_test=58
+2026-04-15 12:29:27,762 [INFO] Saved exp2/data/grpo_train.json (747.3 KB)
+2026-04-15 12:29:27,770 [INFO] Saved exp2/data/grpo_test.json (203.1 KB)
+2026-04-15 12:29:27,770 [INFO] Done.
