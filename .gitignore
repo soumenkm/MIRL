@@ -4,4 +4,6 @@ __pycache__
 *logs
 exp1/data
 exp2/data/url-nlp
+models
 *.out
+*.log
