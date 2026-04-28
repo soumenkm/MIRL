@@ -1,5 +1,0 @@
-2026-04-20 15:53:15,905 [INFO] Logging to exp2/logs/rewards.log
-2026-04-20 15:53:15,905 [INFO] Reward weights: regex=0.0, judge=1.0, format=0.0, lc=0.0
-2026-04-20 15:53:15,905 [INFO] Loading judge model: ./models/gemma-4-31b-it -> cuda:0 (4bit=True)
-2026-04-20 15:53:17,520 [INFO] Judge model will be loaded in 4-bit quantization.
-2026-04-20 15:54:48,776 [INFO] Judge model loaded: 16.35B params, memory=17.79 GB
