@@ -45,17 +45,20 @@ class FinalAnswerStoppingCriteria(StoppingCriteria):
         self._tokens_after_trigger = {}
         self._triggered = {}
 
-    def reset(self, batch_size: int):
+    def reset(self, batch_size: int, prompt_len: int):
         """Reset state for a new generation call."""
         self._tokens_after_trigger = {i: 0 for i in range(batch_size)}
         self._triggered = {i: False for i in range(batch_size)}
+        self._prompt_len = prompt_len
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
         for seq_idx in range(input_ids.shape[0]):
             if self._triggered.get(seq_idx, False):
                 self._tokens_after_trigger[seq_idx] += 1
             else:
-                decoded = self.tokenizer.decode(input_ids[seq_idx], skip_special_tokens=True)
+                # Only decode the GENERATED tokens (after prompt)
+                generated_ids = input_ids[seq_idx, self._prompt_len:]
+                decoded = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
                 if self.trigger_text in decoded:
                     self._triggered[seq_idx] = True
                     self._tokens_after_trigger[seq_idx] = 0
@@ -304,7 +307,7 @@ class GRPOModelManager:
             # Reset stopping criteria state
             for criteria in self.stopping_criteria:
                 if hasattr(criteria, "reset"):
-                    criteria.reset(self.group_size)
+                    criteria.reset(self.group_size, prompt_len)
 
             # Generate
             output_ids = self.policy_model.generate(

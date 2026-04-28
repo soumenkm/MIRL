@@ -1,7 +1,10 @@
 .vscode
 __pycache__
-*acts
+*acts*
 exp1/data
 exp2/data/url-nlp
 models
 *.out
+*.log
+*checkpoints*
+*json
