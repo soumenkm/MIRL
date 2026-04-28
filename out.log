@@ -1,17 +1,0 @@
-2026-04-20 16:09:18,793 [INFO] GPUs available: 1
-2026-04-20 16:09:18,794 [WARNING] Only 1 GPU available. Putting ref model on cuda:0 alongside policy.
-2026-04-20 16:09:18,795 [INFO] Logging to exp2/logs/train.log
-2026-04-20 16:09:18,795 [INFO] Logging to exp2/logs/train.log
-2026-04-20 16:09:18,798 [INFO] Initializing model manager...
-2026-04-20 16:09:18,798 [INFO] Initializing model manager...
-2026-04-20 16:09:18,800 [INFO] Logging to exp2/logs/models.log
-2026-04-20 16:09:18,800 [INFO] Logging to exp2/logs/models.log
-2026-04-20 16:09:18,800 [INFO] Loading tokenizer: ./models/Qwen2.5-7B-Instruct
-2026-04-20 16:09:18,800 [INFO] Loading tokenizer: ./models/Qwen2.5-7B-Instruct
-2026-04-20 16:09:20,468 [INFO] Vocab size: 151643, pad_token: <|endoftext|>
-2026-04-20 16:09:20,468 [INFO] Vocab size: 151643, pad_token: <|endoftext|>
-2026-04-20 16:09:20,470 [INFO] Loading base model: ./models/Qwen2.5-7B-Instruct -> cuda:0 (4bit=True)
-2026-04-20 16:09:20,470 [INFO] Loading base model: ./models/Qwen2.5-7B-Instruct -> cuda:0 (4bit=True)
-Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:01<08:13,  1.46s/it]Loading weights:   1%|          | 2/339 [00:02<07:27,  1.33s/it]/home/speech-nlp-cse/23m2157/miniconda3/envs/mirl/lib/python3.14/site-packages/bitsandbytes/backends/cuda/ops.py:213: FutureWarning: _check_is_size will be removed in a future PyTorch release along with guard_size_oblivious.     Use _check(i >= 0) instead.
-  torch._check_is_size(blocksize)
-Loading weights:   1%|          | 4/339 [00:10<16:52,  3.02s/it]Loading weights:   1%|▏         | 5/339 [00:11<12:05,  2.17s/it]Loading weights:   5%|▍         | 16/339 [00:11<02:02,  2.63it/s]Loading weights:   6%|▌         | 20/339 [00:11<01:30,  3.54it/s]
