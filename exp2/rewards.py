@@ -443,10 +443,10 @@ def main():
     """Sanity check: test regex extraction and reward computation."""
 
     config = {
-        "judge_model_name": "./models/Qwen2.5-7B-Instruct",
+        "judge_model_name": "./models/gemma-4-31b-it",
         "judge_device": "cuda:0",
         "judge_dtype": "float16",
-        "judge_load_in_4bit": True,
+        "judge_load_in_4bit": False,
         "judge_max_new_tokens": 32,
         "log_dir": "./exp2/logs",
         "log_max_response_chars": 500,

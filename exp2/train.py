@@ -532,7 +532,7 @@ def main():
         "max_grad_norm": 1.0,
 
         # ---- Checkpoint and logging ----
-        "checkpoint_save_freq": 10,  # Save every N gradient steps (page 7: 10/20/30)
+        "checkpoint_save_freq": 20,  # Save every N gradient steps (page 7: 10/20/30)
         "resume_from_step": None,    # Set to step number to resume
         "log_every_n_steps": 1,
         "log_dir": "./exp2/logs",
@@ -542,7 +542,7 @@ def main():
         "model_config": {
             "model_name": "./models/Qwen2.5-7B-Instruct",
             "policy_device": "cuda:0",
-            "reference_device": "cuda:0",
+            "reference_device": "cuda:1",
             "dtype": "float16",
 
             # LoRA
@@ -552,15 +552,15 @@ def main():
             "lora_target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"],
 
             # Quantization
-            "policy_load_in_4bit": True,
-            "reference_load_in_4bit": True,
+            "policy_load_in_4bit": False,
+            "reference_load_in_4bit": False,
 
             # Generation
             "max_new_tokens": 512,
             "temperature": 0.7,
             "top_p": 0.95,
             "group_size": 4,
-            "tokens_after_final_answer": 10,
+            "tokens_after_final_answer": 20,
 
             # Logging
             "log_max_response_chars": 500,
@@ -573,9 +573,9 @@ def main():
         # ---- Reward config (passed to RewardManager) ----
         "reward_config": {
             "judge_model_name": "./models/gemma-4-31b-it",
-            "judge_device": "cuda:0",
+            "judge_device": "cuda:2",
             "judge_dtype": "float16",
-            "judge_load_in_4bit": True,
+            "judge_load_in_4bit": False,
             "judge_max_new_tokens": 32,
             "log_dir": "./exp2/logs",
             "log_max_response_chars": 500,
