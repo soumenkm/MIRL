@@ -39,7 +39,6 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from tqdm import tqdm
 
 from grpo_dataset import GRPOMGSMDataset
-from gpu_monitor import GPUMonitor
 from models import GRPOModelManager
 from rewards import RewardManager
 
@@ -80,15 +79,6 @@ class GRPOTrainer:
         # trainer blocks on judge discovery first. If we built the policy/ref
         # models first and the judge never came up, we would have wasted the
         # ~minute of GPU loading time before failing.
-
-        # Start GPU monitor BEFORE any heavy loading so the 'init' phase
-        # captures the memory cost of bringing models up. The monitor is a
-        # daemon thread inside this process; it dies with the trainer.
-        self.logger.info("Starting GPU monitor...")
-        self.gpu_monitor = GPUMonitor(config["monitor_config"])
-        self.gpu_monitor.set_phase("init", step=0)
-        self.gpu_monitor.start()
-
         self.logger.info("Initializing reward manager (will block on judge discovery)...")
         self.reward_mgr = RewardManager(config["reward_config"])
 
@@ -135,7 +125,7 @@ class GRPOTrainer:
         if not self.logger.handlers:
             self.logger.setLevel(logging.INFO)
             fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
-            fh = logging.FileHandler(log_file, mode="w")
+            fh = logging.FileHandler(log_file, mode="a")
             fh.setFormatter(fmt)
             sh = logging.StreamHandler()
             sh.setFormatter(fmt)
@@ -245,42 +235,32 @@ class GRPOTrainer:
             "langs": langs,
         }
 
-    def _compute_and_backward_grpo_loss(self, rollout_data: dict) -> float:
-        """Compute the GRPO loss and run backward pass with memory-efficient
-        gradient accumulation across the B*G inner loop (page 6 of notes).
+    def _compute_grpo_loss(self, rollout_data: dict) -> torch.Tensor:
+        """Compute the GRPO loss for a minibatch (page 6 of notes).
 
-        L = (1/B) Σ_i (1/G) Σ_j (1/|y^i_j|) Σ_t [ min(r_{j,t} · A_j, g_{j,t})
-                                                  - β · D_KL^t ]
+        L = (1/B) Σ_i L^i_GRPO
 
-        By linearity of differentiation:
-            ∇L = Σ_{i,j} ∇L_ij / (B*G)
+        L^i_GRPO = (1/G) Σ_j (1/|y^i_j|) Σ_t [ min(r_{j,t} · A_j, g_{j,t}) - β · D_KL^t ]
 
-        So instead of building the full (B*G)-graph and calling backward once
-        (which keeps activations from all 32 forwards alive simultaneously,
-        ~48 GB on Qwen2.5-7B fp16 → OOM on 80 GB A100), we backward each
-        sub-loss immediately. PyTorch's .backward() accumulates into .grad;
-        the autograd graph from each sub-forward is freed before the next
-        forward starts, so peak activation memory drops from B*G * per_fwd to
-        just per_fwd (~1.5 GB).
-
-        This is mathematically identical to the previous implementation —
-        same gradients, same trained weights modulo float-summation order
-        (which is at noise level). One optimizer.step() per call still =
-        one GRPO step. Checkpoint-every-N-steps semantics unchanged.
+        Where:
+            r_{j,t} = π_θ(t_t|...) / π_θ^old(t_t|...)     (probability ratio)
+            g_{j,t} = (1+ε)·A_j if A_j ≥ 0, (1-ε)·A_j otherwise  (clip function)
+            s_t = π_ref(t_t|...) / π_θ(t_t|...)           (for KL)
+            D_KL^t = s_t - log(s_t) - 1                   (per-token KL)
 
         Returns:
-            float — the (scalar) total loss value, for logging only.
+            Scalar loss tensor with gradients.
         """
         B = len(rollout_data["prompt_ids_list"])
-        G = self.group_size
-        scale = 1.0 / (B * G)
-
-        total_loss_value = 0.0  # for logging only — no autograd needed
+        batch_loss = torch.tensor(
+            0.0, device=self.model_mgr.policy_device, requires_grad=False
+        )
 
         for i in range(B):
             prompt_ids = rollout_data["prompt_ids_list"][i]
+            prompt_loss = torch.tensor(0.0, device=self.model_mgr.policy_device)
 
-            for j in range(G):
+            for j in range(self.group_size):
                 response_ids = rollout_data["response_ids_list"][i][j]
                 old_log_probs = rollout_data["old_log_probs_list"][i][j]
                 advantage = rollout_data["advantages"][i][j]
@@ -306,72 +286,57 @@ class GRPOTrainer:
                 ).to(self.model_mgr.policy_device)  # [response_len]
 
                 # Per-token probability ratio: r_{j,t} = π_θ / π_θ^old
+                # In log space: log(r) = log(π_θ) - log(π_θ^old)
                 log_ratio = current_log_probs - old_log_probs_device
-                ratio = torch.exp(log_ratio)
+                ratio = torch.exp(log_ratio)  # r_{j,t}
 
-                # Clipped objective (page 5-6 of notes)
+                # Clipped objective (page 5-6 of notes):
+                # g_{j,t} = (1+ε)·A_j if A_j ≥ 0, else (1-ε)·A_j
                 if A_jt >= 0:
                     clipped_value = (1 + self.epsilon) * A_jt
                 else:
                     clipped_value = (1 - self.epsilon) * A_jt
 
+                # min(r_{j,t} · A_j, g_{j,t})
                 surrogate = torch.min(
                     ratio * A_jt,
                     torch.tensor(clipped_value, device=ratio.device),
                 )
 
                 # KL divergence (page 6 of notes):
-                # s_t = π_ref / π_θ ; D_KL^t = s_t - log(s_t) - 1
-                log_s = ref_log_probs - current_log_probs
+                # s_t = π_ref(t_t|...) / π_θ(t_t|...)
+                # D_KL^t = s_t - log(s_t) - 1
+                log_s = ref_log_probs - current_log_probs  # log(s_t)
                 s_t = torch.exp(log_s)
-                kl_per_token = s_t - log_s - 1
+                kl_per_token = s_t - log_s - 1  # D_KL^t
 
                 # Per-response loss: (1/|y^i_j|) Σ_t [ surrogate - β · D_KL^t ]
                 per_token_objective = surrogate - self.beta * kl_per_token
                 response_loss = per_token_objective.sum() / response_len
 
-                # Negate (we MAXIMIZE the objective ⇒ MINIMIZE its negative)
-                # and scale by 1/(B*G) so gradients sum to ∇L (not ∇(B*G·L)).
-                sub_loss = -response_loss * scale
+                prompt_loss = prompt_loss + response_loss
 
-                # CRITICAL: backward NOW. This frees the autograd graph for
-                # this single (i, j) sub-forward before the next iteration
-                # builds a new one. Activation memory peak: 1 forward, not 32.
-                sub_loss.backward()
+            # Average over group: (1/G) Σ_j
+            prompt_loss = prompt_loss / self.group_size
+            batch_loss = batch_loss + prompt_loss
 
-                # Accumulate the value for logging. .item() detaches from
-                # the graph and returns a Python float, so this does not
-                # extend the autograd graph or hold tensor memory.
-                total_loss_value += sub_loss.item()
+        # Average over batch: (1/B) Σ_i
+        batch_loss = batch_loss / B
 
-        return total_loss_value
+        # We want to MAXIMIZE the objective, so MINIMIZE the negative
+        return -batch_loss
 
     def _gradient_step(self, rollout_data: dict) -> dict:
-        """Perform one gradient update step (= one GRPO step).
-
-        Order:
-          1. zero_grad
-          2. _compute_and_backward_grpo_loss: forward + backward each of the
-             B*G sub-losses sequentially, accumulating gradients into .grad.
-             Memory-efficient: peak activations = 1 forward, not B*G.
-          3. clip_grad_norm on the accumulated gradient
-          4. optimizer.step + scheduler.step
-          5. global_step += 1   <-- this IS what defines a GRPO step.
-
-        The checkpoint cadence (every checkpoint_save_freq global_steps) is
-        completely unaffected by the gradient-accumulation refactor.
+        """Perform one gradient update step.
 
         Returns:
             Dictionary of metrics for logging.
         """
         self.optimizer.zero_grad()
+        loss = self._compute_grpo_loss(rollout_data)
+        loss.backward()
 
-        # Forward + backward for each (i, j) sub-loss, accumulating .grad.
-        # Returns the scalar loss value (Python float) for logging.
-        loss_value = self._compute_and_backward_grpo_loss(rollout_data)
-
-        # Gradient clipping operates on the ALREADY-accumulated .grad, so
-        # this clips the gradient of the full GRPO loss — same as before.
+        # Gradient clipping
         grad_norm = torch.nn.utils.clip_grad_norm_(
             [p for p in self.model_mgr.policy_model.parameters() if p.requires_grad],
             self.max_grad_norm,
@@ -389,7 +354,7 @@ class GRPOTrainer:
 
         metrics = {
             "step": self.global_step,
-            "loss": loss_value,
+            "loss": loss.item(),
             "grad_norm": grad_norm.item() if isinstance(grad_norm, torch.Tensor) else grad_norm,
             "lr": self.scheduler.get_last_lr()[0],
             "avg_reward": sum(all_rewards_flat) / len(all_rewards_flat),
@@ -482,19 +447,7 @@ class GRPOTrainer:
             N = 200 (per lang), G = 4, B = batch_size
             Steps per iteration = N_total / B
             Checkpoint every checkpoint_save_freq steps
-
-        Wrapped in try/finally so the GPU monitor flushes its CSV and joins
-        cleanly even if training crashes (the CSV around the moment of an
-        OOM is exactly what we want to inspect).
         """
-        try:
-            self._train_loop()
-        finally:
-            self.gpu_monitor.set_phase("shutdown", step=self.global_step)
-            self.gpu_monitor.stop()
-
-    def _train_loop(self):
-        """Inner training loop (separated from train() for monitor cleanup)."""
         all_metrics = []
         total_examples = len(self.train_dataset)
         steps_per_iteration = total_examples // self.batch_size
@@ -542,18 +495,9 @@ class GRPOTrainer:
 
             for batch_indices in pbar:
                 # Step 1: Collect rollouts from current policy (= π_θ^old for this batch)
-                # 'rollout' covers BOTH policy generation and the remote
-                # judge call. Generation dominates GPU memory; the judge is
-                # over HTTP and uses no local GPU.
-                self.gpu_monitor.set_phase("rollout", step=self.global_step)
                 rollout_data = self._collect_rollouts(batch_indices)
 
                 # Step 2: Compute GRPO loss and update
-                # 'backward' covers the B*G sub-forwards-with-grad, the per-
-                # sub-loss backward calls, gradient clipping, and the
-                # optimizer step. With Solution A (gradient accumulation),
-                # peak memory here should be ~30 GB instead of 77.5 GB.
-                self.gpu_monitor.set_phase("backward", step=self.global_step)
                 metrics = self._gradient_step(rollout_data)
 
                 # Update progress bar
@@ -573,7 +517,6 @@ class GRPOTrainer:
 
                 # Save checkpoint
                 if self.global_step % self.checkpoint_save_freq == 0:
-                    self.gpu_monitor.set_phase("checkpoint", step=self.global_step)
                     self.model_mgr.save_checkpoint(
                         step=self.global_step,
                         optimizer=self.optimizer,
@@ -589,7 +532,6 @@ class GRPOTrainer:
             pbar.close()
 
             # End of iteration: evaluate
-            self.gpu_monitor.set_phase("eval", step=self.global_step)
             self._evaluate(iteration + 1)
 
             # Log iteration summary
@@ -660,7 +602,7 @@ def main():
         "model_config": {
             "model_name": Path("./models/Qwen2.5-7B-Instruct"),
             "policy_device": "cuda:0",
-            "reference_device": "cuda:0",
+            "reference_device": "cuda:1",
             "dtype": "float16",
 
             # LoRA
@@ -726,17 +668,6 @@ def main():
             "languages": ["en", "bn", "te", "th", "ru", "ja", "zh"],
             "num_few_shot": 1,
             "seed": 42,
-        },
-
-        # ---- GPU monitor config (passed to GPUMonitor) ----
-        # Daemon thread sampling memory + utilization to CSV. CSV is
-        # truncated at start of every run -> rerunning train.py wipes the
-        # previous run's data.
-        "monitor_config": {
-            "csv_path":   Path("./exp2/logs/gpu_monitor.csv"),
-            "log_dir":    Path("./exp2/logs"),
-            "interval_s": 2.0,
-            "gpu_ids":    None,   # None = all visible GPUs
         },
     }
 

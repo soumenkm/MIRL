@@ -312,6 +312,7 @@ def main():
         "extra_serve_args": [
             "--language-model-only",
             "--max-num-batched-tokens", "16384",
+            "--generation-config", "vllm",
         ],
 
         "connection_file": Path("./exp2/outputs/judge_connection.json"),
