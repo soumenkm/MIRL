@@ -27,6 +27,9 @@ Phase 1 architecture:
       blocks until the judge is healthy, so it is fine to submit both
       jobs at once — this trainer will wait.
 """
+import os
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
 import json
 import logging
@@ -643,7 +646,7 @@ def main():
         "data_dir":   Path("./exp2/data"),
 
         # ---- Training hyperparameters ----
-        "num_iterations": 16,        # 500 grad steps / 31 steps_per_iter ≈ 16 (page 7)
+        "num_iterations": 4,        # 500 grad steps 
         "batch_size": 8,             # B in notes (page 7)
         "group_size": 4,             # G in notes (page 7)
         "epsilon": 0.2,              # ε for clipping (page 5)

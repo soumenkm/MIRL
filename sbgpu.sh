@@ -22,6 +22,10 @@ MEM="${6:-64G}"
 CONDA_ENV="${SBGPU_CONDA_ENV:-mirl}"
 ACCOUNT="${SBGPU_ACCOUNT:-23m2157}"
 QOS="$PARTITION"
+EXCLUDE_NODES=""
+if [ "$PARTITION" = "dgx" ]; then
+    EXCLUDE_NODES="cn11-dgx"
+fi
 
 if [ -z "$PYSCRIPT" ]; then
     echo "Usage: bash sbgpu.sh <script.py> [partition] [num_gpus] [time] [job_name] [mem]"
@@ -52,6 +56,7 @@ cat > "$TMPSCRIPT" << EOF
 #SBATCH --time=$TIME
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=$MEM
+${EXCLUDE_NODES:+#SBATCH --exclude=$EXCLUDE_NODES}
 #SBATCH --output=$LOGDIR/${JOBNAME}_%j.log
 #SBATCH --chdir=$WORKDIR
 
@@ -86,7 +91,7 @@ chmod +x "$TMPSCRIPT"
 echo "Submitting job:"
 echo "  python:    $PYSCRIPT_ABS"
 echo "  workdir:   $WORKDIR"
-echo "  partition: $PARTITION | qos: $QOS | account: $ACCOUNT"
+echo "  partition: $PARTITION | qos: $QOS | account: $ACCOUNT${EXCLUDE_NODES:+ | exclude: $EXCLUDE_NODES}"
 echo "  GPUs:      $GPUS | mem: $MEM | time: $TIME | conda: $CONDA_ENV"
 echo "  job name:  $JOBNAME"
 echo "  log:       $LOGDIR/${JOBNAME}_<jobid>.log"
