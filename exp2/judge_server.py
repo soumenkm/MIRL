@@ -7,6 +7,8 @@ the container and triggers a "driver too old" error during EngineCore init.
 
 Designed to run as a separate SLURM job from the trainer. The trainer
 discovers this server via the connection file written here.
+
+SBGPU_CONDA_ENV=judge bash sbgpu.sh exp2/judge_server.py l40 2 48:00:00 judge 80G
 """
 
 import os

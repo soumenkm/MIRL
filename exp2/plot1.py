@@ -328,12 +328,12 @@ class Plot1CoTLanguageProbability:
                     )
                     ax.set_xlabel("GRPO step")
                     ax.set_ylabel("Layer (0 = first transformer block)")
-                    ax.set_xticks(steps)
-                    ax.set_xticklabels(
-                        [str(int(s)) for s in steps],
-                        rotation=0,
-                        fontsize=8,
-                    )
+                    # ax.set_xticks(steps)
+                    # ax.set_xticklabels(
+                    #     [str(int(s)) for s in steps],
+                    #     rotation=0,
+                    #     fontsize=8,
+                    # )
                     ax.set_ylim(-0.5, self.n_layers - 0.5)
                     # Y ticks every 4 layers for readability with L=28.
                     ax.set_yticks(np.arange(0, self.n_layers, 4))
@@ -416,8 +416,8 @@ class Plot1CoTLanguageProbability:
                 "Layer-averaged Q  (mean over layers 0..%d)" % (self.n_layers - 1)
             )
             ax.set_ylim(0.0, 1.0)
-            ax.set_xticks(steps)
-            ax.set_xticklabels([str(int(s)) for s in steps], fontsize=8)
+            # ax.set_xticks(steps)
+            # ax.set_xticklabels([str(int(s)) for s in steps], fontsize=8)
             ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
             ax.legend(
                 title="Target language",

@@ -774,7 +774,7 @@ def main():
         # ---- Eval / extraction knobs ----
         "max_new_tokens": 1024,        # upper bound; greedy may stop earlier
         "top_k": 50,                  # Plot 1 top-K from the notes
-        "prompt_fraction": 0.5,       # 0 < frac <= 1; per-language subset
+        "prompt_fraction": 1.0,       # 0 < frac <= 1; per-language subset
         "num_checkpoints": 30,         # linspace count over [0, max_saved_step]
         "subset_seed": 42,            # determinism for prompt_fraction < 1
         "tokens_after_final_answer": 20,

@@ -1,17 +1,42 @@
 #!/bin/bash
 # sbgpu.sh — Submit a Python GPU job to SLURM
 #
-# Usage: bash sbgpu.sh <script.py> [partition] [num_gpus] [time] [job_name] [mem]
+# Usage:
+#   bash sbgpu.sh <script.py> [partition] [num_gpus] [time] [job_name] [mem] [node]
+#
+# Positional Arguments:
+#   1. script.py    Path to the Python script to run (required)
+#   2. partition    SLURM partition: dgx (default), a40, l40
+#   3. num_gpus     Number of GPUs (default: 1)
+#   4. time         Wall time limit (default: 12:00:00)
+#   5. job_name     SLURM job name (default: script basename)
+#   6. mem          Memory per node (default: 64G)
+#   7. node         Node name to pin to, e.g. cn14-dgx (default: SLURM decides)
+#
+# Environment Variables:
+#   SBGPU_CONDA_ENV   Conda environment name (default: mirl)
+#   SBGPU_ACCOUNT     SLURM account (default: 23m2157)
+#   SBGPU_NODE        Node name override, same as positional arg 7
+#
+# Partition Limits:
+#   dgx   max 6 days  |  a40   max 4 days  |  l40   max 2 days
 #
 # Examples:
-#   bash sbgpu.sh exp2/train.py                                    # dgx, 1 GPU, 12h, 64G
-#   bash sbgpu.sh exp2/train.py dgx 1 12:00:00 grpo_train 128G
-#   bash sbgpu.sh exp2/train.py l40 2 48:00:00 grpo_l40 64G
-#   bash sbgpu.sh exp2/train.py a40 1 04:00:00 reward_test
+#   bash sbgpu.sh exp2/train.py
+#       → dgx, 1 GPU, 12h, 64G, SLURM picks node
 #
-# Env vars:
-#   SBGPU_CONDA_ENV  (default: mirl)
-#   SBGPU_ACCOUNT    (default: 23m2157)
+#   bash sbgpu.sh exp2/train.py dgx 1 12:00:00 grpo_train 128G
+#       → dgx, 1 GPU, 12h, 128G, SLURM picks node
+#
+#   bash sbgpu.sh exp2/train.py dgx 1 12:00:00 grpo_train 128G cn14-dgx
+#       → dgx, 1 GPU, 12h, 128G, pinned to cn14-dgx
+#
+#   bash sbgpu.sh exp2/train.py l40 2 48:00:00 grpo_l40 64G
+#       → l40, 2 GPUs, 48h, 64G, SLURM picks node
+#
+#   SBGPU_NODE=cn14-dgx bash sbgpu.sh exp2/train.py
+#       → dgx, 1 GPU, 12h, 64G, pinned to cn14-dgx via env var
+
 
 PYSCRIPT="$1"
 PARTITION="${2:-dgx}"
@@ -19,18 +44,22 @@ GPUS="${3:-1}"
 TIME="${4:-12:00:00}"
 JOBNAME="${5:-$(basename "${PYSCRIPT%.py}")}"
 MEM="${6:-64G}"
+NODELIST="${7:-${SBGPU_NODE:-}}"   # optional: e.g. "cn14-dgx"
 CONDA_ENV="${SBGPU_CONDA_ENV:-mirl}"
 ACCOUNT="${SBGPU_ACCOUNT:-23m2157}"
 QOS="$PARTITION"
+
+# If a specific node is requested, skip exclude; otherwise exclude cn11-dgx on dgx partition
 EXCLUDE_NODES=""
-if [ "$PARTITION" = "dgx" ]; then
+if [ -z "$NODELIST" ] && [ "$PARTITION" = "dgx" ]; then
     EXCLUDE_NODES="cn11-dgx"
 fi
 
 if [ -z "$PYSCRIPT" ]; then
-    echo "Usage: bash sbgpu.sh <script.py> [partition] [num_gpus] [time] [job_name] [mem]"
-    echo "Example: bash sbgpu.sh exp2/train.py dgx 1 12:00:00 grpo_train 128G"
+    echo "Usage: bash sbgpu.sh <script.py> [partition] [num_gpus] [time] [job_name] [mem] [node]"
+    echo "Example: bash sbgpu.sh exp2/train.py dgx 1 12:00:00 grpo_train 128G cn14-dgx"
     echo "Partitions: dgx (6d), a40 (4d), l40 (2d)"
+    echo "Node names: cn14-dgx, cn15-dgx, ... (omit to let SLURM decide)"
     exit 1
 fi
 
@@ -44,7 +73,6 @@ WORKDIR=$(pwd)
 LOGDIR="$HOME/logs/sbatch"
 mkdir -p "$LOGDIR"
 
-# Create a proper bash batch script (avoids --wrap and /bin/sh issues on DGX)
 TMPSCRIPT=$(mktemp "$HOME/.sbgpu_job_XXXXXX.sh")
 cat > "$TMPSCRIPT" << EOF
 #!/bin/bash
@@ -57,6 +85,7 @@ cat > "$TMPSCRIPT" << EOF
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=$MEM
 ${EXCLUDE_NODES:+#SBATCH --exclude=$EXCLUDE_NODES}
+${NODELIST:+#SBATCH --nodelist=$NODELIST}
 #SBATCH --output=$LOGDIR/${JOBNAME}_%j.log
 #SBATCH --chdir=$WORKDIR
 
@@ -88,11 +117,12 @@ echo "Job finished at \$(date)"
 EOF
 chmod +x "$TMPSCRIPT"
 
+NODE_DISPLAY="${NODELIST:-<slurm picks>}"
 echo "Submitting job:"
 echo "  python:    $PYSCRIPT_ABS"
 echo "  workdir:   $WORKDIR"
 echo "  partition: $PARTITION | qos: $QOS | account: $ACCOUNT${EXCLUDE_NODES:+ | exclude: $EXCLUDE_NODES}"
-echo "  GPUs:      $GPUS | mem: $MEM | time: $TIME | conda: $CONDA_ENV"
+echo "  GPUs:      $GPUS | node: $NODE_DISPLAY | mem: $MEM | time: $TIME | conda: $CONDA_ENV"
 echo "  job name:  $JOBNAME"
 echo "  log:       $LOGDIR/${JOBNAME}_<jobid>.log"
 echo "----------------------------------------------------------------"
@@ -111,15 +141,12 @@ echo "  Check status: squeue -j $JOB_ID"
 echo "  Cancel:       scancel $JOB_ID"
 echo "  Temp script:  $TMPSCRIPT (auto-deleted after job starts)"
 
-# Background process: wait for job to start running, then clean up
 (
     while true; do
         STATE=$(squeue -j "$JOB_ID" -h -o "%T" 2>/dev/null)
         if [ -z "$STATE" ]; then
-            # Job gone from queue (finished/cancelled/failed)
             break
         elif [ "$STATE" = "RUNNING" ]; then
-            # Job running — script contents already printed via cat $0
             sleep 10
             break
         fi
