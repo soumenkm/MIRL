@@ -1,0 +1,13 @@
+{
+  "host": "cn41-l40.prajna.iitb.ac.in",
+  "ip": "192.168.1.45",
+  "port": 8765,
+  "url": "http://192.168.1.45:8765",
+  "model_path": "/home/speech-nlp-cse/23m2157/MS_Research/MIRL/models/gemma-4-31b-it",
+  "scenario": "l40",
+  "partition": "l40",
+  "tensor_parallel_size": 2,
+  "pid": 739413,
+  "ready": true,
+  "timestamp": 1780379428.4555707
+}

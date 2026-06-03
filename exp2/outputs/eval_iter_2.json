@@ -1,0 +1,37 @@
+{
+  "en": {
+    "accuracy": 0.92,
+    "correct": 46,
+    "total": 50
+  },
+  "bn": {
+    "accuracy": 0.58,
+    "correct": 29,
+    "total": 50
+  },
+  "te": {
+    "accuracy": 0.38,
+    "correct": 19,
+    "total": 50
+  },
+  "th": {
+    "accuracy": 0.74,
+    "correct": 37,
+    "total": 50
+  },
+  "ru": {
+    "accuracy": 0.92,
+    "correct": 46,
+    "total": 50
+  },
+  "ja": {
+    "accuracy": 0.78,
+    "correct": 39,
+    "total": 50
+  },
+  "zh": {
+    "accuracy": 0.84,
+    "correct": 42,
+    "total": 50
+  }
+}

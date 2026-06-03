@@ -7,8 +7,8 @@ models
 *.out
 *.log
 *checkpoints*
-*json
 *tmp*
 *logs*
 *.sif
 a.md
+judge_cache

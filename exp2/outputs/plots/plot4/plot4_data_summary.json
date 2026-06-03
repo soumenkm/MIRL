@@ -1,0 +1,73 @@
+{
+    "checkpoint_steps": [
+        0,
+        20,
+        40,
+        60,
+        80,
+        100,
+        120,
+        140,
+        180,
+        200,
+        220,
+        240,
+        260,
+        280,
+        300,
+        320,
+        340,
+        360,
+        380,
+        400,
+        420,
+        440,
+        460,
+        500,
+        520,
+        540,
+        560,
+        580,
+        600,
+        620
+    ],
+    "n_checkpoints": 30,
+    "n_layers": 28,
+    "hidden_dim": 3584,
+    "languages": [
+        "en",
+        "bn",
+        "te",
+        "th",
+        "ru",
+        "ja",
+        "zh"
+    ],
+    "target_languages_cross_lingual": [
+        "en",
+        "bn",
+        "te",
+        "th",
+        "ru",
+        "ja",
+        "zh"
+    ],
+    "prompts_per_language": {
+        "en": 50,
+        "bn": 50,
+        "te": 50,
+        "th": 50,
+        "ru": 50,
+        "ja": 50,
+        "zh": 50
+    },
+    "cmap": "viridis",
+    "cka_method": "Linear CKA via (N, N) Gram-matrix form on column-mean-centered activations; mathematically identical to Kornblith et al. 2019.",
+    "sanity_checks": {
+        "cka_en_en_min": 1.0,
+        "cka_en_en_max": 1.0,
+        "drift_step0_min": 1.0,
+        "drift_step0_max": 1.0
+    },
+    "notes": "Cross-lingual CKA[j, i, T] = LinearCKA between English and target-T mean-CoT activations at layer i of checkpoint j. Drift D[j, i, P] = LinearCKA between language P's activations at the first discovered checkpoint (base model) and at checkpoint j. Both use the (N, N) Gram form for speed and mean-center column by column as in Kornblith et al."
+}
