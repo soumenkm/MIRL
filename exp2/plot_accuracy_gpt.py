@@ -215,12 +215,12 @@ class PlotAccuracyGPT:
             loc="best",
             framealpha=0.9,
         )
-        ax.set_title("Eval accuracy across GRPO checkpoints (GPT judge)")
-
         judge_short = Path(self.judge_model).name if self.judge_model else "unknown"
+        ax.set_title(f"Eval accuracy across GRPO checkpoints ({judge_short})")
+
         caption = (
             f"One line per language. Accuracy = mean YES rate from the "
-            f"OpenAI GPT judge over all eval prompts of that language. "
+            f"judge over all eval prompts of that language. "
             f"CoTs were produced by eval.py via greedy decoding (re-used "
             f"here; no regeneration). Judge model: {judge_short}."
         )
@@ -291,12 +291,12 @@ def main():
     )
     main_logger = logging.getLogger("Main")
 
-    if not torch.cuda.is_available():
-        raise RuntimeError("No GPU detected.")
-    main_logger.info(
-        f"GPUs available: {torch.cuda.device_count()} "
-        f"({torch.cuda.get_device_name(0)})"
-    )
+    # if not torch.cuda.is_available():
+    #     raise RuntimeError("No GPU detected.")
+    # main_logger.info(
+    #     f"GPUs available: {torch.cuda.device_count()} "
+    #     f"({torch.cuda.get_device_name(0)})"
+    # )
 
     config = {
         # ---- Required path roots ----
