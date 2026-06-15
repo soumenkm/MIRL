@@ -1,0 +1,119 @@
+{
+    "checkpoint_steps": [
+        0,
+        20,
+        40,
+        60,
+        80,
+        100,
+        120,
+        140,
+        160,
+        180
+    ],
+    "n_checkpoints": 10,
+    "languages": [
+        "en",
+        "bn",
+        "te",
+        "th",
+        "ru",
+        "ja",
+        "zh"
+    ],
+    "per_step_per_language_accuracy": {
+        "0": {
+            "en": 0.92,
+            "bn": 0.72,
+            "te": 0.38,
+            "th": 0.78,
+            "ru": 0.94,
+            "ja": 0.8,
+            "zh": 0.82
+        },
+        "20": {
+            "en": 0.92,
+            "bn": 0.76,
+            "te": 0.38,
+            "th": 0.76,
+            "ru": 0.94,
+            "ja": 0.78,
+            "zh": 0.82
+        },
+        "40": {
+            "en": 0.92,
+            "bn": 0.74,
+            "te": 0.38,
+            "th": 0.78,
+            "ru": 0.94,
+            "ja": 0.8,
+            "zh": 0.82
+        },
+        "60": {
+            "en": 0.92,
+            "bn": 0.76,
+            "te": 0.38,
+            "th": 0.78,
+            "ru": 0.94,
+            "ja": 0.78,
+            "zh": 0.82
+        },
+        "80": {
+            "en": 0.92,
+            "bn": 0.76,
+            "te": 0.38,
+            "th": 0.78,
+            "ru": 0.94,
+            "ja": 0.78,
+            "zh": 0.82
+        },
+        "100": {
+            "en": 0.92,
+            "bn": 0.78,
+            "te": 0.38,
+            "th": 0.8,
+            "ru": 0.94,
+            "ja": 0.78,
+            "zh": 0.82
+        },
+        "120": {
+            "en": 0.92,
+            "bn": 0.76,
+            "te": 0.38,
+            "th": 0.78,
+            "ru": 0.94,
+            "ja": 0.8,
+            "zh": 0.82
+        },
+        "140": {
+            "en": 0.92,
+            "bn": 0.74,
+            "te": 0.38,
+            "th": 0.78,
+            "ru": 0.94,
+            "ja": 0.78,
+            "zh": 0.82
+        },
+        "160": {
+            "en": 0.92,
+            "bn": 0.76,
+            "te": 0.38,
+            "th": 0.76,
+            "ru": 0.94,
+            "ja": 0.82,
+            "zh": 0.82
+        },
+        "180": {
+            "en": 0.92,
+            "bn": 0.76,
+            "te": 0.38,
+            "th": 0.76,
+            "ru": 0.94,
+            "ja": 0.8,
+            "zh": 0.82
+        }
+    },
+    "judge_model": "regex+gpt-4o-mini",
+    "scores_dir": "exp2/outputs/scores_gpt",
+    "notes": "Accuracy at each (checkpoint, language) is the mean YES rate from the OpenAI GPT judge over the eval prompts of that language. Source: per-checkpoint JSON files produced by judge_with_gpt.py. This script is purely a plotting wrapper; it does not call the judge."
+}

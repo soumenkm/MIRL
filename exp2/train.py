@@ -700,8 +700,9 @@ def main():
             "log_max_response_chars": 500,
 
             # Phase 1: judge-only accuracy
-            "weight_accuracy_regex":       0.0,
-            "weight_accuracy_judge":       1.0,
+            "weight_accuracy":       1.0,
+            "weight_accuracy_regex": 0.0,
+            "weight_accuracy_judge": 0.0,
             "weight_format":               0.0,
             "weight_language_consistency": 0.0,
 

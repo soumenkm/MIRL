@@ -1,0 +1,64 @@
+{
+    "checkpoint_steps": [
+        0,
+        20,
+        40,
+        60,
+        80,
+        100,
+        120,
+        140,
+        160,
+        180
+    ],
+    "n_checkpoints": 10,
+    "n_layers": 28,
+    "languages": [
+        "en",
+        "bn",
+        "te",
+        "th",
+        "ru",
+        "ja",
+        "zh"
+    ],
+    "phase_boundaries": {
+        "early": [
+            0,
+            10
+        ],
+        "mid": [
+            11,
+            20
+        ],
+        "late": [
+            21,
+            27
+        ]
+    },
+    "phase_sizes": {
+        "early": 11,
+        "mid": 10,
+        "late": 7
+    },
+    "first_layers": [
+        0,
+        1,
+        2
+    ],
+    "last_layers": [
+        25,
+        26,
+        27
+    ],
+    "prompts_per_language": {
+        "en": 50,
+        "bn": 50,
+        "te": 50,
+        "th": 50,
+        "ru": 50,
+        "ja": 50,
+        "zh": 50
+    },
+    "notes": "F[j, P, T, phi] = mean over prompts of language P, then over CoT tokens, then over the layers in phase phi, of the indicator that the top-1 logit-lens predicted token belongs to target language T at checkpoint j (middle row). G_first[j, P, T, idx] = mean over prompts of language P, then over CoT tokens, of the same indicator at the single layer first_layers[idx] (top row). G_last[j, P, T, idx] is the same at the single layer last_layers[idx] (bottom row). Punctuation, special tokens, and tokens outside the seven studied languages contribute zero to every target in F, G_first, and G_last."
+}

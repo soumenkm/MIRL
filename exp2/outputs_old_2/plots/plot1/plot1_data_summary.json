@@ -1,0 +1,36 @@
+{
+  "checkpoint_steps": [
+    0,
+    20,
+    40,
+    60,
+    80,
+    100,
+    120,
+    140,
+    160
+  ],
+  "n_checkpoints": 9,
+  "n_layers": 28,
+  "languages": [
+    "en",
+    "bn",
+    "te",
+    "th",
+    "ru",
+    "ja",
+    "zh"
+  ],
+  "prompts_per_language": {
+    "en": 50,
+    "bn": 50,
+    "te": 50,
+    "th": 50,
+    "ru": 50,
+    "ja": 50,
+    "zh": 50
+  },
+  "top_k": 50,
+  "cmap": "viridis",
+  "notes": "Q[j, i, P, T] = mean over prompts of language P, then over CoT tokens, of the renormalized top-K logit-lens probability that layer i at checkpoint j predicts a token of language T. Renormalization is over the 7 studied languages (punct/special/other dropped)."
+}
