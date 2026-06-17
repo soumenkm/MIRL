@@ -402,18 +402,36 @@ class EvalActivationsExtractor:
         """Put the policy model into the state of checkpoint `step`.
 
         step == 0 -> base model, LoRA disabled (no adapter applied).
-        step >  0 -> load the saved adapter at <checkpoint_dir>/checkpoint-<N>/.
+        step >  0 -> the saved adapter at <checkpoint_dir>/checkpoint-<N>/.
 
-        TRL/HF Trainer save the LoRA adapter files directly inside
+        IMPORTANT — why this is written with named adapter slots rather than
+        rebuilding the PeftModel each step:
+
+        The previous implementation called ``disable_adapter_layers()`` for
+        step 0 and then, for each later step, unwrapped the base model with
+        ``get_base_model()`` and built a brand-new ``PeftModel.from_pretrained``
+        around it. That left the adapter layers in a *disabled* state on the
+        shared base modules (the step-0 disable was never undone), so every
+        subsequent generation ran through the bare base model. The result:
+        byte-identical CoTs for every checkpoint, and a perfectly flat
+        accuracy curve that looked like "RL had no effect" but was really the
+        base model evaluated 26 times.
+
+        The robust pattern is to keep ONE PeftModel for the whole run, load
+        each checkpoint's weights into it as a named adapter once, and switch
+        between them with ``set_adapter`` (which selects AND enables) /
+        ``enable_adapter_layers`` / ``disable_adapter_layers``. We never touch
+        the 7B base weights and we can never leak a disabled state forward,
+        because every step>0 explicitly re-enables the layers.
+
+        TRL/HF Trainer save the LoRA adapter directly inside
         ``checkpoint-<N>/`` (adapter_config.json + adapter_model.safetensors),
-        with no ``adapter/`` subfolder and no train_state.pt. We therefore
-        load the adapter ourselves with PeftModel.from_pretrained rather than
-        calling GRPOModelManager.load_checkpoint (which assumes the old
-        hand-rolled layout).
+        with no ``adapter/`` subfolder and no train_state.pt.
         """
         if step == 0:
             self.logger.info("Activating base model (LoRA disabled)")
             self.policy_model.disable_adapter_layers()
+            self.policy_model.eval()
             return
 
         ckpt = self._checkpoint_path(step)
@@ -425,18 +443,35 @@ class EvalActivationsExtractor:
                 f"and adapter_model.safetensors."
             )
 
+        adapter_name = f"ckpt_{step}"
         self.logger.info(f"Activating checkpoint step={step} from {ckpt}")
-        # Reload the adapter fresh onto the base model. We pull the base model
-        # out of the current PeftModel so we don't reload the 7B base weights.
-        base_model = self.policy_model.get_base_model()
-        self.policy_model = PeftModel.from_pretrained(
-            base_model,
-            str(ckpt),
-            is_trainable=False,
-        ).to(self.policy_device)
+
+        # Load this checkpoint's weights as a named adapter exactly once.
+        # PeftModel tracks loaded adapters in .peft_config; reuse if present.
+        if adapter_name not in self.policy_model.peft_config:
+            self.policy_model.load_adapter(
+                str(ckpt),
+                adapter_name=adapter_name,
+                is_trainable=False,
+            )
+
+        # set_adapter selects this adapter as active. Crucially we then
+        # ENABLE the adapter layers — this undoes any earlier step-0 disable
+        # and is the line whose absence caused the flat-curve bug.
+        self.policy_model.set_adapter(adapter_name)
+        self.policy_model.enable_adapter_layers()
         self.policy_model.eval()
 
-        # Refresh cached module references after the swap.
+        # Sanity assertion: confirm the active adapter is what we asked for.
+        active = getattr(self.policy_model, "active_adapter", None)
+        if active != adapter_name:
+            self.logger.warning(
+                f"Active adapter is {active!r}, expected {adapter_name!r}."
+            )
+
+        # Refresh cached module references (base is unchanged, but the
+        # lm_head/norm handles are cheap to re-resolve and keeps us safe if a
+        # future PEFT version reparents modules).
         base = self.policy_model.get_base_model()
         self.final_norm = base.model.norm
         self.lm_head = base.lm_head

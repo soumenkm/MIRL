@@ -576,7 +576,7 @@ def main():
         "lora_target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"],
 
         # ---- GRPO hyperparameters (gold standard from the reference notebook) ----
-        "learning_rate":               5e-6,
+        "learning_rate":               5e-5,
         "weight_decay":                0.1,
         "warmup_ratio":                0.1,
         "lr_scheduler_type":           "cosine",
